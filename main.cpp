@@ -3,9 +3,12 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <stack>
+#include <unordered_set>
 
-void print_board();
+void print_board(bool add=false);
 void process_inputs();
+bool verify(std::pair<int, int> pos);
 
 HANDLE hConsole;
 std::vector<std::vector<char>> board;
@@ -21,6 +24,9 @@ CHAR ascii;
 
 bool change = true;
 
+std::stack<std::pair<int, int>> empty;
+std::stack<std::pair<int, int>> answers;
+
 int main()
 {
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -32,20 +38,26 @@ int main()
     while(running)
     {
         if(change)
-        {
-            system("cls");
             print_board();
-        }
 
         process_inputs();
+    }
+
+    while(!empty.empty())
+    {
+        // todo
     }
 
     return 0;
 }
 
-void print_board()
+void print_board(bool add)
 {
+    system("cls");
+
     bool c = false;
+    char f;
+
     for(int y=0; y<9; y++)
     {
         for(int x=0; x<9; x++)
@@ -57,7 +69,11 @@ void print_board()
             if(c)
                 SetConsoleTextAttribute(hConsole, 11);
 
-            std::cout << board[y][x] << ' ';
+            f = board[y][x];
+            std::cout << f << ' ';
+
+            if(add && f == '.')
+                empty.emplace(y,x);
 
             if(c)
                 SetConsoleTextAttribute(hConsole, 15);
@@ -128,4 +144,77 @@ void process_inputs()
         running = false;
         break;
     }   
+}
+
+bool verify_row(int y)
+{
+    std::unordered_set<char> values;
+    int s;
+
+    for(char& v : board[y])
+    {
+        if(v == '.')
+            continue;
+
+        s = values.size();
+        values.emplace(v);
+
+        if(s == values.size())
+            return false;
+    }
+
+    return true;
+}
+
+bool verify_col(int x)
+{
+    std::unordered_set<char> values;
+    int s;
+
+    for(const std::vector<char>& row : board)
+    {
+        if(row[x] == '.')
+            continue;
+
+        s = values.size();
+        values.emplace(row[x]);
+
+        if(s == values.size())
+            return false;
+    }
+
+    return true;
+}
+
+std::pair<int, int> get_square(std::pair<int, int> pos)
+{
+    return std::make_pair((pos.first/3)*3, pos.second/3);
+}
+
+bool verify_square(std::pair<int, int> square)
+{
+    std::unordered_set<char> values;
+    int s;
+
+    for(int y=square.first; y<square.first+3; y++)
+    {
+        for(int x=square.second; x<square.second+3; x++)
+        {
+            if(board[y][x] == '.')
+                continue;
+
+            s = values.size();
+            values.emplace(board[y][x]);
+
+            if(s == values.size())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool verify(std::pair<int, int> pos)
+{
+    return verify_row(pos.first) && verify_col(pos.second) && verify_square(get_square(pos));
 }
