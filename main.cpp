@@ -14,7 +14,7 @@ HANDLE hConsole;
 std::vector<std::vector<char>> board;
 
 bool running = true;
-std::pair<int, int> pos = std::make_pair(0,0);
+std::pair<int, int> _pos = std::make_pair(0,0);
 
 HANDLE hInput;
 DWORD events;
@@ -33,7 +33,7 @@ int main()
     hInput = GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT | ENABLE_PROCESSED_INPUT);
 
-    board = std::vector<std::vector<char>>(9, std::vector<char>(9, '.'));
+    board = std::vector<std::vector<char>>(9, std::vector<char>(9, '0'));
 
     while(running)
     {
@@ -43,10 +43,53 @@ int main()
         process_inputs();
     }
 
+    print_board(true);
+
+    char counter = '0';
+    std::pair<int, int> pos;
     while(!empty.empty())
     {
-        // todo
+        _pos = pos = empty.top();
+
+        if(counter > '9')
+            counter = board[pos.first][pos.second];
+        else
+            counter = '0';
+
+        do
+        {
+            if(++counter > '9')
+                break;
+            
+            board[pos.first][pos.second] = counter;
+            print_board();
+
+        } while (!verify(pos));
+
+        if(counter <= '9')
+        {
+            answers.push(pos);
+            empty.pop();
+            
+            continue;
+        }
+
+        board[pos.first][pos.second] = '0';
+
+        if(answers.empty())
+        {
+            SetConsoleTextAttribute(hConsole, 0x4);
+            std::cout << "[x] Failed to find the solution...\n";
+            SetConsoleTextAttribute(hConsole, 0xF);
+
+            return 1;
+        }
+
+        empty.push(answers.top());
+        answers.pop();
     }
+
+    print_board();
 
     return 0;
 }
@@ -65,18 +108,18 @@ void print_board(bool add)
             if(x == 3 || x == 6)
                 std::cout << "| ";
 
-            c = (y == pos.second && x == pos.first);
+            c = (y == _pos.second && x == _pos.first);
             if(c)
-                SetConsoleTextAttribute(hConsole, 11);
+                SetConsoleTextAttribute(hConsole, 0xB);
 
             f = board[y][x];
-            std::cout << f << ' ';
+            std::cout << (f == '0' ? '.' : f) << ' ';
 
-            if(add && f == '.')
+            if(add && f == '0')
                 empty.emplace(y,x);
 
             if(c)
-                SetConsoleTextAttribute(hConsole, 15);
+                SetConsoleTextAttribute(hConsole, 0xF);
         }
 
         std::cout << '\n';
@@ -119,27 +162,27 @@ void process_inputs()
     if(ascii >= '0' && ascii <= '9')
     {
         change = true;  
-        board[pos.second][pos.first] = (ascii == '0' ? '.' : ascii);
+        board[_pos.second][_pos.first] = ascii;
         return;
     }
 
     if(ascii >= 32)
     {
         change = true;  
-        board[pos.second][pos.first] = '.';
+        board[_pos.second][_pos.first] = '0';
         return;
     }
 
     switch (key_event.wVirtualKeyCode)
     {
     case VK_UP:
-        modif(pos.second, false); break;
+        modif(_pos.second, false); break;
     case VK_DOWN:
-        modif(pos.second, true);  break;
+        modif(_pos.second, true);  break;
     case VK_LEFT:
-        modif(pos.first, false);  break;
+        modif(_pos.first, false);  break;
     case VK_RIGHT:
-        modif(pos.first, true);   break;
+        modif(_pos.first, true);   break;
     default:
         running = false;
         break;
@@ -153,7 +196,7 @@ bool verify_row(int y)
 
     for(char& v : board[y])
     {
-        if(v == '.')
+        if(v == '0')
             continue;
 
         s = values.size();
@@ -173,7 +216,7 @@ bool verify_col(int x)
 
     for(const std::vector<char>& row : board)
     {
-        if(row[x] == '.')
+        if(row[x] == '0')
             continue;
 
         s = values.size();
@@ -188,7 +231,7 @@ bool verify_col(int x)
 
 std::pair<int, int> get_square(std::pair<int, int> pos)
 {
-    return std::make_pair((pos.first/3)*3, pos.second/3);
+    return std::make_pair(pos.first/3, pos.second/3);
 }
 
 bool verify_square(std::pair<int, int> square)
@@ -196,11 +239,14 @@ bool verify_square(std::pair<int, int> square)
     std::unordered_set<char> values;
     int s;
 
+    square.first  *= 3;
+    square.second *= 3;
+
     for(int y=square.first; y<square.first+3; y++)
     {
         for(int x=square.second; x<square.second+3; x++)
         {
-            if(board[y][x] == '.')
+            if(board[y][x] == '0')
                 continue;
 
             s = values.size();
