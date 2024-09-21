@@ -5,6 +5,7 @@
 #include <utility>
 #include <stack>
 #include <unordered_set>
+#include <ctime>
 
 void print_board(bool add=false);
 void process_inputs();
@@ -27,6 +28,9 @@ bool change = true;
 std::stack<std::pair<int, int>> empty;
 std::stack<std::pair<int, int>> answers;
 
+bool display_time = false;
+std::time_t time_start;
+
 int main()
 {
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -43,6 +47,9 @@ int main()
         process_inputs();
     }
 
+    time_start = std::time(nullptr);
+    display_time = true;
+    
     print_board(true);
 
     char counter = '0';
@@ -132,6 +139,9 @@ void print_board(bool add)
             std::cout << '\n';
         }
     }
+
+    if(display_time)
+        std::cout << "\nTime elapsed: " << std::time(nullptr) - time_start << "s";
 }
 
 void modif(int& c, bool i)

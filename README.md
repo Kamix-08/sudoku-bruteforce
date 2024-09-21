@@ -10,7 +10,7 @@ Simple C++ script to simulate bruteforcing a sudoku puzzle in real time.
 # the plan
 
 - [x] create a functional version
-- [ ] add tries counter and a timer
+- [x] add a timer
 - [ ] improve graphical representation
 - [ ] add replay speed customization options
 - [ ] add other input options
