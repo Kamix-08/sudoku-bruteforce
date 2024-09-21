@@ -12,16 +12,15 @@ void process_inputs();
 bool verify(std::pair<int, int> pos);
 
 HANDLE hConsole;
+CONSOLE_CURSOR_INFO cursor_info;
+
 std::vector<std::vector<char>> board;
+std::vector<std::pair<int, int>> fixed;
 
 bool running = true;
 std::pair<int, int> _pos = std::make_pair(0,0);
 
 HANDLE hInput;
-DWORD events;
-INPUT_RECORD input_record;
-KEY_EVENT_RECORD key_event;
-CHAR ascii;
 
 bool change = true;
 
@@ -35,7 +34,11 @@ int main()
 {
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     hInput = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleCursorInfo(hConsole, &cursor_info);
+
     SetConsoleMode(hConsole, ENABLE_WINDOW_INPUT | ENABLE_PROCESSED_INPUT);
+    cursor_info.bVisible = false;
+    SetConsoleCursorInfo(hConsole, &cursor_info);
 
     board = std::vector<std::vector<char>>(9, std::vector<char>(9, '0'));
 
@@ -106,7 +109,9 @@ void print_board(bool add)
     system("cls");
 
     bool c = false;
+    bool d = false;
     char f;
+    int ptr = 0;
 
     for(int y=0; y<9; y++)
     {
@@ -115,17 +120,32 @@ void print_board(bool add)
             if(x == 3 || x == 6)
                 std::cout << "| ";
 
-            c = (y == _pos.second && x == _pos.first);
+            c = (y == _pos.first && x == _pos.second);
+            
             if(c)
                 SetConsoleTextAttribute(hConsole, 0xB);
+            else
+            {
+                if(ptr < fixed.size() && (y == fixed[ptr].first && x == fixed[ptr].second))
+                {
+                    SetConsoleTextAttribute(hConsole, 0x5);
+                    ++ptr;
+                    d = true;
+                }
+            }
 
             f = board[y][x];
             std::cout << (f == '0' ? '.' : f) << ' ';
 
-            if(add && f == '0')
-                empty.emplace(y,x);
+            if(add)
+            {
+                if(f == '0')
+                    empty.emplace(y,x);
+                else
+                    fixed.emplace_back(y,x);
+            }
 
-            if(c)
+            if(c || d)
                 SetConsoleTextAttribute(hConsole, 0xF);
         }
 
@@ -141,7 +161,19 @@ void print_board(bool add)
     }
 
     if(display_time)
-        std::cout << "\nTime elapsed: " << std::time(nullptr) - time_start << "s";
+    {
+        std::time_t t = std::time(nullptr) - time_start;
+
+        std::cout << "\nTime elapsed: ";
+
+        // i know it's bad, but it's not THAT bad 
+        if(t >= 3600)
+            std::cout << t/3660 << "h ";
+
+        if(t >= 60)
+            std::cout << (t/60)%3600 << "m ";
+        std::cout << t%60 << "s";
+    }
 }
 
 void modif(int& c, bool i)
@@ -156,43 +188,46 @@ void modif(int& c, bool i)
 
 void process_inputs()
 {
+    DWORD events;
+    INPUT_RECORD input_record;
+
     change = false;
     ReadConsoleInput(hInput, &input_record, 1, &events);
 
     if(input_record.EventType != KEY_EVENT)
         return;
 
-    key_event = input_record.Event.KeyEvent;
+    KEY_EVENT_RECORD key_event = input_record.Event.KeyEvent;
 
     if(!key_event.bKeyDown)
         return;
 
 
-    ascii = key_event.uChar.AsciiChar;
+    CHAR ascii = key_event.uChar.AsciiChar;
     if(ascii >= '0' && ascii <= '9')
     {
         change = true;  
-        board[_pos.second][_pos.first] = ascii;
+        board[_pos.first][_pos.second] = ascii;
         return;
     }
 
     if(ascii >= 32)
     {
         change = true;  
-        board[_pos.second][_pos.first] = '0';
+        board[_pos.first][_pos.second] = '0';
         return;
     }
 
     switch (key_event.wVirtualKeyCode)
     {
     case VK_UP:
-        modif(_pos.second, false); break;
+        modif(_pos.first, false); break;
     case VK_DOWN:
-        modif(_pos.second, true);  break;
+        modif(_pos.first, true);  break;
     case VK_LEFT:
-        modif(_pos.first, false);  break;
+        modif(_pos.second, false);  break;
     case VK_RIGHT:
-        modif(_pos.first, true);   break;
+        modif(_pos.second, true);   break;
     default:
         running = false;
         break;
