@@ -10,6 +10,7 @@
 void print_board(bool add=false);
 void process_inputs();
 bool verify(std::pair<int, int> pos);
+bool process_flags(int argc, char* argv[]);
 
 HANDLE hConsole;
 CONSOLE_CURSOR_INFO cursor_info;
@@ -30,7 +31,7 @@ std::stack<std::pair<int, int>> answers;
 bool display_time = false;
 std::time_t time_start;
 
-int main()
+int main(int argc, char* argv[])
 {
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -41,6 +42,9 @@ int main()
     SetConsoleCursorInfo(hConsole, &cursor_info);
 
     board = std::vector<std::vector<char>>(9, std::vector<char>(9, '0'));
+
+    if(!process_flags(argc, argv))
+        return 0;
 
     while(running)
     {
@@ -92,7 +96,7 @@ int main()
             std::cout << "[x] Failed to find the solution...\n";
             SetConsoleTextAttribute(hConsole, 0xF);
 
-            return 1;
+            return 0;
         }
 
         empty.push(answers.top());
@@ -309,3 +313,80 @@ bool verify(std::pair<int, int> pos)
 {
     return verify_row(pos.first) && verify_col(pos.second) && verify_square(get_square(pos));
 }
+
+bool process_flags(int argc, char* argv[])
+{
+    if(argc == 1)
+        return true;
+
+    // -- "-h" flag --
+    for(int i=1; i<argc; i++)
+    {
+        if(_stricmp(argv[i], "-h") == 0)
+        {
+            std::cout << "\nsudoku-bruteforce\n"
+                      << "-----------------\n\n"
+                      << "Usage:\n"
+                      << "\t./main [-h] [-s] [-b <board>]\n\n"
+                      << "Options:\n"
+                      << "\t-h           Show this help message and exit\n"
+                      << "\t-s           Start the program without prompting for user input\n"
+                      << "\t-b <board>   Setup the board with the specified 81 characters\n\n"
+                      << "Examples:\n"
+                      << "\t./main -s -b ..43..2.9..5..9..1.7..6..43..6..2.8719...74...5..83...6.....1.5..35.869..4291.3..\n"
+                      << "\t\tSolves the sudoku board passed as a string.\n\n";
+
+            return false;
+        }
+    }
+
+    // -- "-s" flag --
+    for(int i=1; i<argc; i++)
+    {
+        if(_stricmp(argv[i], "-s") == 0)
+        {
+            running = false;
+            break;
+        }
+    }
+
+    // -- "-b" flag --
+    for(int i=1; i<argc; i++)
+    {
+        if(_stricmp(argv[i], "-b") == 0)
+        {
+            if(i == argc-1)
+            {
+                SetConsoleTextAttribute(hConsole, 0x4);
+                std::cout << "[x] The -b flag cannot be the last argument.\n";
+                SetConsoleTextAttribute(hConsole, 0xF);
+
+                return false;
+            }
+
+            std::string b = argv[i+1];
+
+            if(b.length() != 81)
+            {
+                SetConsoleTextAttribute(hConsole, 0x4);
+                std::cout << "[x] The argument directly after the -b flag has to be exactly 81 characters.\n";
+                SetConsoleTextAttribute(hConsole, 0xF);
+
+                return false;
+            }
+
+            for(int y=0; y<9; y++)
+            {
+                for(int x=0; x<9; x++)
+                {
+                    char c = b[y*9 + x];
+                    board[y][x] = (c >= '0' && c <= '9' ? c : '0');
+                }
+            }
+
+            break;
+        }
+    }
+
+    return true;
+}   

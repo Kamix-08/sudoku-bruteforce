@@ -5,6 +5,9 @@
 
 Simple C++ script to simulate bruteforcing a sudoku puzzle in real time.
 
+> [!NOTE]
+> This is not an optimal way of solving a sudoku puzzle, because it's not meant to be. I made this to see how long it can take to bruteforce some puzzles, rather than to pretend bruteforcing is a good strategy.
+
 <br>
 
 # the plan
@@ -13,7 +16,7 @@ Simple C++ script to simulate bruteforcing a sudoku puzzle in real time.
 - [x] add a timer
 - [x] improve graphical representation
 - [ ] add replay speed customization options
-- [ ] add other input options
+- [x] add other input options
 - [ ] make the code compatible with Linux and MacOS
 
 _(all pull requests are welcome)_
@@ -37,35 +40,53 @@ _(an example using `gcc`)_
 
 ```bash
 g++ -o main main.cpp
-./main
 ```
 
 <br>
 
-## using the program
+## flags
 
-After executing the program, you will be prompted with an empty sudoku board:
+If you execute the program with no flags:
 
-![1](https://github.com/user-attachments/assets/5add96c3-4f42-4fab-905a-7129bc2790ff)
+```bash
+./main
+```
+
+you will be prompted with an empty sudoku board, such as this one:
+
+![empty board](./img/img1.png)
+
+You can use arrow keys to navigate and 0-9 keys to change the values in the cells.
+
+After you fill in the whole board, you can press `Enter` to let the program run.
+
+---
+
+Alternately, you can use the following flags:
+
+| Flag | Description |
+|:-----|:------------|
+|`-h`  | Displays the help menu and exits. |
+|`-s`  | Executes the program without asking for user input. |
+|`-b <board>` | Setups the board with the specified string of 81 characters. |
 
 <br>
 
-You can use the arrow keys to move your pointer (highlighted in light blue), and the number keys to insert values.
+Example:
 
-![2](https://github.com/user-attachments/assets/cbe766b2-a8a8-496c-88cc-18d8213c174b)
+```bash
+./main -s -b ..43..2.9..5..9..1.7..6..43..6..2.8719...74...5..83...6.....1.5..35.869..4291.3..
+```
 
-<br>
+This will start solving the given board without waiting for user input.
 
-To remove the value in a cell, press `0`.
+## results
 
-After filling in the board, press `Enter` to let the code run.
+The program will _eventually_ find the solution, if one exists.
 
-<br>
+![solved board](./img/img2.png)
 
-After some time, the solution will be found:
-
-![3](https://github.com/user-attachments/assets/a7be3dbe-b6a1-4b0c-805c-69697a33730b)
-
-or in case of a failure, the following message will be displayed:
+If it doesn't, the program will output the following message:
 
     [x] Failed to find the solution...
+
