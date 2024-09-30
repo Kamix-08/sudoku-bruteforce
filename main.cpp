@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <ctime>
 
-void print_board(bool add=false);
+void print_board(bool add=false, bool pt=true);
 void print_time();
 void process_inputs();
 bool verify(std::pair<int, int> pos);
@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
     {
         if(change)
         {
-            print_board();
             system("cls");
+            print_board(false, false);
         }
 
         process_inputs();
@@ -117,12 +117,11 @@ int main(int argc, char* argv[])
 
     system("cls");
     print_board();
-    
 
     return 0;
 }
 
-void print_board(bool add)
+void print_board(bool add, bool pt)
 {
     if(!print)
         return;
@@ -179,7 +178,8 @@ void print_board(bool add)
         }
     }
 
-    print_time();
+    if(pt)
+        print_time();
 }
 
 void print_time()

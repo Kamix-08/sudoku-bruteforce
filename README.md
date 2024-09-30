@@ -67,7 +67,7 @@ Alternately, you can use the following flags:
 | Flag | Description |
 |:-----|:------------|
 |`-h`  | Displays the help menu and exits. |
-|`-n`  | Don't print the board wile bruteforcing. |
+|`-n`  | Don't print the board while bruteforcing. |
 |`-s`  | Executes the program without asking for user input. |
 |`-b <board>` | Setups the board with the specified string of 81 characters. |
 
