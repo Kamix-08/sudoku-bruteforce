@@ -8,6 +8,7 @@
 #include <ctime>
 
 void print_board(bool add=false);
+void print_time();
 void process_inputs();
 bool verify(std::pair<int, int> pos);
 bool process_flags(int argc, char* argv[]);
@@ -28,8 +29,10 @@ bool change = true;
 std::stack<std::pair<int, int>> empty;
 std::stack<std::pair<int, int>> answers;
 
-bool display_time = false;
 std::time_t time_start;
+
+bool print = true;
+bool display = true;
 
 int main(int argc, char* argv[])
 {
@@ -49,15 +52,18 @@ int main(int argc, char* argv[])
     while(running)
     {
         if(change)
+        {
             print_board();
+            system("cls");
+        }
 
         process_inputs();
     }
 
     time_start = std::time(nullptr);
-    display_time = true;
     
     print_board(true);
+    print = display;
 
     char counter = '0';
     std::pair<int, int> pos;
@@ -76,6 +82,10 @@ int main(int argc, char* argv[])
                 break;
             
             board[pos.first][pos.second] = counter;
+
+            if(print)
+                system("cls");
+
             print_board();
 
         } while (!verify(pos));
@@ -103,14 +113,19 @@ int main(int argc, char* argv[])
         answers.pop();
     }
 
+    print = true;
+
+    system("cls");
     print_board();
+    
 
     return 0;
 }
 
 void print_board(bool add)
 {
-    system("cls");
+    if(!print)
+        return;
 
     bool c = false;
     bool d = false;
@@ -164,20 +179,23 @@ void print_board(bool add)
         }
     }
 
-    if(display_time)
-    {
-        std::time_t t = std::time(nullptr) - time_start;
+    print_time();
+}
 
-        std::cout << "\nTime elapsed: ";
+void print_time()
+{
+    std::time_t t = std::time(nullptr) - time_start;
 
-        // i know it's bad, but it's not THAT bad 
-        if(t >= 3600)
-            std::cout << t/3660 << "h ";
+    std::cout << "\nTime elapsed: ";
 
-        if(t >= 60)
-            std::cout << (t/60)%3600 << "m ";
-        std::cout << t%60 << "s";
-    }
+    // i know it's bad, but it's not THAT bad 
+    // right?
+    if(t >= 3600)
+        std::cout << t/3660 << "h ";
+
+    if(t >= 60)
+        std::cout << (t/60)%3600 << "m ";
+    std::cout << t%60 << "s";
 }
 
 void modif(int& c, bool i)
@@ -330,6 +348,7 @@ bool process_flags(int argc, char* argv[])
                       << "\t./main [-h] [-s] [-b <board>]\n\n"
                       << "Options:\n"
                       << "\t-h           Show this help message and exit\n"
+                      << "\t-n           Don't print the board while bruteforcing\n"
                       << "\t-s           Start the program without prompting for user input\n"
                       << "\t-b <board>   Setup the board with the specified 81 characters\n\n"
                       << "Examples:\n"
@@ -384,6 +403,16 @@ bool process_flags(int argc, char* argv[])
                 }
             }
 
+            break;
+        }
+    }
+
+    // -- "-n" flag --
+    for(int i=1; i<argc; i++)
+    {
+        if(_stricmp(argv[i], "-n") == 0)
+        {
+            display = false;
             break;
         }
     }
